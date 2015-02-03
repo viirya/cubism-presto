@@ -1,6 +1,7 @@
 cubism.context = function() {
   var context = new cubism_context,
       step = 1e4, // ten seconds, in milliseconds
+      refreshStep = 1e3,
       size = 1440, // four hours at ten seconds, in pixels
       start0, stop0, // the start and stop for the previous change event
       start1, stop1, // the start and stop for the next prepare event
@@ -11,8 +12,12 @@ cubism.context = function() {
       timeout,
       focus;
 
+  var now = Date.now();
+  var pseudoNow = null;
+  var nowPseudoNowDiff = 0;
+
   function update() {
-    var now = Date.now();
+    var now = context.getNow();
     stop0 = new Date(Math.floor((now - serverDelay - clientDelay) / step) * step);
     start0 = new Date(stop0 - size * step);
     stop1 = new Date(Math.floor((now - serverDelay) / step) * step);
@@ -21,15 +26,30 @@ cubism.context = function() {
     return context;
   }
 
+  context.getNow = function() {
+    var cur_now = now;
+    if (pseudoNow != null) {
+      cur_now = cur_now - nowPseudoNowDiff;
+    }
+    return cur_now;
+  }
+
+  setTimeout(function increaseTime() {
+    now += step;
+    setTimeout(increaseTime, 1e3);
+  });
+
   context.start = function() {
+    var now = context.getNow();
+ 
     if (timeout) clearTimeout(timeout);
-    var delay = +stop1 + serverDelay - Date.now();
+    var delay = +stop1 + serverDelay - now;
 
     // If we're too late for the first prepare event, skip it.
-    if (delay < clientDelay) delay += step;
-
+    //if (delay < clientDelay) delay += step;
+    delay = 100;
     timeout = setTimeout(function prepare() {
-      stop1 = new Date(Math.floor((Date.now() - serverDelay) / step) * step);
+      stop1 = new Date(Math.floor((context.getNow() - serverDelay) / step) * step);
       start1 = new Date(stop1 - size * step);
       event.prepare.call(context, start1, stop1);
 
@@ -40,10 +60,17 @@ cubism.context = function() {
         event.focus.call(context, focus);
       }, clientDelay);
 
-      timeout = setTimeout(prepare, step);
+      timeout = setTimeout(prepare, refreshStep);
     }, delay);
     return context;
   };
+
+  context.pseudoNow = function(_) {
+    if (!arguments.length) return pseudoNow;
+    pseudoNow = _.getTime();
+    nowPseudoNowDiff = Date.now() - pseudoNow;
+    return update();
+  }
 
   context.stop = function() {
     timeout = clearTimeout(timeout);
@@ -60,6 +87,12 @@ cubism.context = function() {
     return update();
   };
 
+  context.refreshStep = function(_) {
+    if (!arguments.length) return refreshStep;
+    refreshStep = +_;
+    return update();
+  };
+ 
   // Set or get the context size (the count of metric values).
   // Defaults to 1440 (four hours at ten seconds).
   context.size = function(_) {

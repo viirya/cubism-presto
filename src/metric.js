@@ -53,7 +53,7 @@ cubism_contextPrototype.metric = function(request, name) {
       values = [],
       event = d3.dispatch("change"),
       listening = 0,
-      fetching;
+      fetching = false;
 
   // Prefetch new data into a temporary array.
   function prepare(start1, stop) {

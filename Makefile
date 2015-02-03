@@ -22,6 +22,7 @@ cubism.v1.js: \
 	src/comparison.js \
 	src/axis.js \
 	src/rule.js \
+	src/presto.js\
 	Makefile
 
 %.min.js: %.js Makefile
