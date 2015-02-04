@@ -68,8 +68,7 @@ cubism.context = function() {
     var delay = +stop1 + serverDelay - now;
 
     // If we're too late for the first prepare event, skip it.
-    //if (delay < clientDelay) delay += step;
-    delay = 100;
+    if (delay < clientDelay) delay += step;
     timeout = setTimeout(function prepare() {
       stop1 = new Date(Math.floor((context.getNow() - serverDelay) / step) * step);
       start1 = new Date(stop1 - size * step);
@@ -403,12 +402,12 @@ cubism_contextPrototype.librato = function(user, token) {
 var cubism_libratoFormatDate = function(time) {
   return Math.floor(time / 1000);
 };
-cubism_contextPrototype.presto = function(host, port) {
-  if (!arguments.length) host = "", port = "";
+cubism_contextPrototype.graphite = function(host) {
+  if (!arguments.length) host = "";
   var source = {},
       context = this;
 
-  source.metric = function(table) {
+  source.metric = function(expression) {
     var sum = "sum";
 
     var metric = context.metric(function(start, stop, step, callback) {
