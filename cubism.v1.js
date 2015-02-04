@@ -1410,7 +1410,7 @@ cubism_contextPrototype.presto = function(url) {
     return this;
   } 
 
-  source.metric = function(table) {
+  source.metric = function(table, title) {
 
     var metric = context.metric(function(start, stop, step, callback) {
       var query = 'select ';
@@ -1443,7 +1443,7 @@ cubism_contextPrototype.presto = function(url) {
           if (!json) return callback(new Error("unable to load data"));
           callback(null, cubism_prestoParse(json, approximation_mode, step / 1000, start.toString()));
         });
-    }, table += "");
+    }, title += "");
 
     return metric;
   };
