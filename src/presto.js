@@ -13,6 +13,8 @@ cubism_contextPrototype.presto = function(url) {
       timeFieldStatement = timeField,
       valueField = "value";
 
+  var condition = "";
+
   var interval = 1e5;
 
   var pseudonow = moment().format("YYYY-MM-DD hh:mm:ss");
@@ -25,6 +27,11 @@ cubism_contextPrototype.presto = function(url) {
 
   source.setApproximationMode = function(isApprox) {
     approximation_mode = isApprox;
+    return this;
+  }
+
+  source.setCondition = function(_condition) {
+    condition = _condition;
     return this;
   }
 
@@ -55,11 +62,18 @@ cubism_contextPrototype.presto = function(url) {
       query +=  '$datetrunc as time, ';
       query +=  aggregation_func + '(' + valueField + ')';
       query += ' from ' + table + ' where $timeFilter';
+      query += '$optionCondition';
       query += ' group by $interval';
 
       var timeFilter = getTimeFilter(timeFieldStatement, timezone, start, stop);
 
       query = query.replace('$timeFilter', timeFilter);
+
+      if (condition != "") {
+        query = query.replace('$optionCondition', ' and (' + condition + ')');
+      } else {
+        query = query.replace('$optionCondition', ''); 
+      }
 
       var prestoIntervalState = getPrestoInterval(timeFieldStatement, moment(start.toString()).format("YYYY-MM-DD hh:mm:ss"), step / 1000);
 

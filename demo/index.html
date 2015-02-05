@@ -110,17 +110,29 @@ var context = cubism.context()
     .serverDelay(0)
     .clientDelay(0)
     .pseudoNow(new Date(2014, 3, 12))
-    .step(5e5)
+    .step(3e5)
     .refreshStep(1e3)
-    .size(1000);
+    .size(1230);
 
 var presto = context.presto("");
 presto.setApproximationMode(true);
+//1st parameter: time field, 2nd parameter: is it string type
 presto.setTimeField("play_time", false);
 presto.setValueField("member_id");
 presto.setAggregationFunc("count");
-var metric = presto.metric("servicelogs_time_sample3");
-
+//optional
+presto.setCondition("genre_id = 2");
+var metric = presto.metric("servicelogs_time_sample3", "member id");
+ 
+var presto2 = context.presto("");
+presto2.setApproximationMode(true);
+presto2.setTimeField("play_time", false);
+presto2.setValueField("duration");
+presto2.setAggregationFunc("avg");
+//optional
+presto2.setCondition("genre_id = 2");
+var metric2 = presto2.metric("servicelogs_time_sample3", "duration");
+ 
 d3.select("#demo").selectAll(".axis")
     .data(["top"])
   .enter().append("div")
@@ -132,10 +144,11 @@ d3.select("body").append("div")
     .call(context.rule());
 
 d3.select("body").selectAll(".horizon")
-    .data([metric])
+    .data([metric, metric2])
   .enter().insert("div", ".bottom")
     .attr("class", "horizon")
   .call(context.horizon()
+    .height(120)
     .format(d3.format("d")));
 
 context.on("focus", function(i) {
