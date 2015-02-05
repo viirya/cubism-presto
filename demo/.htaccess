@@ -1,0 +1,5 @@
+AuthBasicAuthoritative off
+AuthType Basic
+AuthName "Test"
+AuthUserFile /path/to/.htpassed
+Require valid-user
